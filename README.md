@@ -16,7 +16,7 @@ yarn add react-actioncable-provider
 import ActionCable from 'actioncable'
 import ActionCableProvider from 'react-actioncable-provider'
 
-<ActionCableProvider cable={ActionCable.createConsumer(WEBSOCKET_URL)}
+<ActionCableProvider cable={ActionCable.createConsumer(WEBSOCKET_URL)}>
   <App />
 </ActionCableProvider>
 ```
