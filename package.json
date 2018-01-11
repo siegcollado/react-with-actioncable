@@ -1,0 +1,14 @@
+{
+  "name": "react-with-actioncable",
+  "version": "0.0.1",
+  "description": "Higher order component to pair with ActionCableProvider",
+  "main": "index.js",
+  "repository": "https://github.com/siegcollado/react-with-actioncable",
+  "author": "Sieg Collado",
+  "license": "MIT",
+  "peerDependencies": {
+    "react-actioncable-provider": "^1.0.2",
+    "react": ">=15",
+    "prop-types": "^15.6.0"
+  }
+}
