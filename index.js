@@ -158,7 +158,11 @@ export default (options) => (Inner) => {
 
       console.log(`[ActionCable] connected to ${channel}`)
 
-      onConnect(this.channel)
+      onConnect({
+        ...this.resolvePassedProps(),
+        ...boundBroadcasters,
+        ...boundMethods
+      })
     }
 
     handleDisconnection = () => {
@@ -177,13 +181,21 @@ export default (options) => (Inner) => {
       } else {
         console.log(`[ActionCable] disconnected from ${channel}`)
         this.removeSubscription()
-        onDisconnect()
+        onDisconnect({
+          ...this.resolvePassedProps(),
+          ...broadcasters,
+          ...serverMethods
+        })
       }
     }
 
     handleRejection = () => {
       this.removeSubscription()
-      onReject()
+      onReject({
+        ...this.resolvePassedProps(),
+        ...broadcasters,
+        ...serverMethods
+      })
     }
 
     removeSubscription = () => {
