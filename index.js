@@ -15,7 +15,7 @@ export default (options) => (Inner) => {
   }
 
   const {
-    params,
+    params: paramResolver,
     onConnect,
     onReceive,
     onDisconnect,
@@ -26,26 +26,25 @@ export default (options) => (Inner) => {
     serverMethods
   } = { ...defaults, ...options }
 
-
   class WithActionCable extends Component {
 
     static propTypes = {
       cable: PropTypes.object.isRequired
     }
 
-    constructor (props) {
-      super(props)
-
-      if (autoConnect) {
-        this.connectToChannel(params(props))
-      }
-    }
+    static displayName = `WithActionCable(${Inner.displayName || Inner.name})`
 
     state = {
       data: {},
       boundBroadcasters: { ...broadcasters },
       boundMethods: { ...serverMethods },
       connected: false
+    }
+
+    componentDidMount () {
+      if (autoConnect) {
+        this.connectToChannel(paramResolver(props))
+      }
     }
 
     componentWillUnmount () {
@@ -106,30 +105,35 @@ export default (options) => (Inner) => {
 
     handleConnection = () => {
 
-      const boundBroadcasters = {}
-      const boundMethods = {}
-
       // Connects functions to ActionCable.send and ActionCable.perform(method)
-
-      Object.keys(broadcasters).forEach((broadcaster) => {
-        boundBroadcasters[broadcaster] = (...broadcastParams) => {
-          const computedParams = broadcasters[broadcaster](...broadcastParams)
-          console.log('[ActionCable] Broadcasting', computedParams)
-          this.channel.send(computedParams)
+      const boundBroadcasters = Object.keys(broadcasters).reduce((result, broadcaster) => {
+        return {
+          ...result,
+          [broadcaster]: (...broadcastParams) => {
+            const computedParams = broadcasters[broadcaster](...broadcastParams)
+            console.log('[ActionCable] Broadcasting', computedParams)
+            this.channel.send(computedParams)
+          }
         }
-      })
+      }, {})
 
-      Object.keys(serverMethods).forEach((method) => {
-        boundMethods[method] = (...methodParams) => {
-          const computedParams = serverMethods[method](...methodParams)
-          console.log(`[ActionCable] calling ${channel}#${method}`, computedParams)
-          this.channel.perform(method, computedParams)
+      const boundMethods = Object.keys(serverMethods).reduce((result, method) => {
+        return {
+          ...result,
+          [method]: (...methodParams) => {
+            const computedParams = serverMethods[method](...methodParams)
+            console.log(`[ActionCable] calling ${channel}#${method}`, computedParams)
+            this.channel.perform(method, computedParams)
+          }
         }
-      })
+      }, {})
+
+      console.log('boundBroadcasters: ', boundBroadcasters)
+      console.log('boundMethods: ', boundMethods)
 
       this.setState({
-        boundMethods,
         boundBroadcasters,
+        boundMethods,
         connected: true
       })
 
@@ -175,6 +179,7 @@ export default (options) => (Inner) => {
         console.log(`[ActionCable] removing subscription to ${channel}`)
 
         subscriptions.remove(this.channel)
+        this.channel = null
 
         // remove calls
         this.setState({
@@ -185,7 +190,6 @@ export default (options) => (Inner) => {
         })
       }
     }
-
 
     render () {
 
