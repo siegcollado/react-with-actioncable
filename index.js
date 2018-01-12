@@ -51,6 +51,28 @@ export default (options) => (Inner) => {
       this.removeSubscription()
     }
 
+    resolvePassedProps () {
+
+      const {
+        data,
+        boundBroadcasters,
+        boundMethods,
+        connected
+      } = this.state
+
+      return {
+        ...this.props,
+        ...data,
+        ...boundBroadcasters,
+        ...boundMethods,
+        cable: {
+          connected,
+          connectToChannel: this.connectToChannel,
+          disconnectFromChannel: this.disconnectFromChannel
+        }
+      }
+    }
+
     connectToChannel = (channelParams = {}) => {
       const {
         connected
@@ -98,7 +120,7 @@ export default (options) => (Inner) => {
 
       console.log(`[ActionCable] received data from ${channel}`, dataFromChannel)
 
-      const data = onReceive(dataFromChannel, this.props) || null
+      const data = onReceive(dataFromChannel, this.resolvePassedProps()) || null
 
       this.setState({ data })
     }
@@ -127,9 +149,6 @@ export default (options) => (Inner) => {
           }
         }
       }, {})
-
-      console.log('boundBroadcasters: ', boundBroadcasters)
-      console.log('boundMethods: ', boundMethods)
 
       this.setState({
         boundBroadcasters,
@@ -192,27 +211,8 @@ export default (options) => (Inner) => {
     }
 
     render () {
-
-      const {
-        data,
-        boundBroadcasters,
-        boundMethods,
-        connected
-      } = this.state
-
-      const cableProps = {
-        connected,
-        connectToChannel: this.connectToChannel,
-        disconnectFromChannel: this.disconnectFromChannel
-      }
-
       return (
-        <Inner
-          {...this.props}
-          {...data}
-          {...boundBroadcasters}
-          {...boundMethods}
-          cable={cableProps} />
+        <Inner {...this.resolvePassedProps()} />
       )
     }
   }
